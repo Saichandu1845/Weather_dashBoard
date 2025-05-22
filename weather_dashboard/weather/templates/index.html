@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Weather Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; background: #eef; padding: 20px; }
+        .weather-box { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+    </style>
+</head>
+<body>
+    <div class="weather-box">
+        <h2>Weather Forecast</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="city" placeholder="Enter city" required>
+            <button type="submit">Get Weather</button>
+        </form>
+
+        {% if weather %}
+            {% if weather.error %}
+                <p>{{ weather.error }}</p>
+            {% else %}
+                <h3>{{ weather.city }}</h3>
+                <p>Temperature: {{ weather.temp }} °C</p>
+                <p>Humidity: {{ weather.humidity }}%</p>
+                <p>Wind: {{ weather.wind }} m/s</p>
+                <img src="http://openweathermap.org/img/w/{{ weather.icon }}.png" alt="icon">
+
+                <canvas id="forecastChart" width="400" height="200"></canvas>
+
+                <script>
+                    const labels = {{ weather.forecast|safe }}.map(item => item.dt_txt);
+                    const temps = {{ weather.forecast|safe }}.map(item => item.temp);
+
+                    const ctx = document.getElementById('forecastChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Temperature (°C)',
+                                data: temps,
+                                borderColor: 'blue',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                x: { display: true },
+                                y: { beginAtZero: false }
+                            }
+                        }
+                    });
+                </script>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
